@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Play } from "lucide-react";
 import {
   Carousel,
@@ -56,6 +56,29 @@ const Portfolio = () => {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [api, setApi] = useState<any>(null);
+
+  // Set up autoplay with interval
+  useEffect(() => {
+    if (!api) return;
+
+    // Default autoplay interval (faster)
+    const defaultInterval = 3000;
+    // Slower interval when hovering
+    const hoverInterval = 6000;
+
+    // Set up autoplay timer
+    const autoplayInterval = setInterval(() => {
+      if (api.canScrollNext()) {
+        api.scrollNext();
+      } else {
+        api.scrollTo(0);
+      }
+    }, isHovering ? hoverInterval : defaultInterval);
+
+    // Clean up the interval on unmount
+    return () => clearInterval(autoplayInterval);
+  }, [api, isHovering]);
 
   return (
     <section id="portfolio" className="py-24 relative overflow-hidden">
@@ -82,14 +105,15 @@ const Portfolio = () => {
           }}
           className="w-full"
           ref={carouselRef}
+          setApi={setApi}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
         >
           <CarouselContent>
             {videoItems.map((video) => (
               <CarouselItem 
                 key={video.id} 
-                className="basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3 p-2"
-                onMouseEnter={() => setIsHovering(true)}
-                onMouseLeave={() => setIsHovering(false)}
+                className="basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 p-2 transition-all duration-500"
               >
                 <Dialog>
                   <DialogTrigger asChild>
