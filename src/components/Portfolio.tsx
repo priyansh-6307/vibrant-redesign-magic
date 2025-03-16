@@ -79,7 +79,6 @@ const Portfolio = () => {
             loop: true,
             dragFree: true,
             containScroll: false,
-            speed: isHovering ? 15 : 5, // Slower on hover
           }}
           className="w-full"
           ref={carouselRef}
