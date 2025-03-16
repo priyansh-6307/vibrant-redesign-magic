@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 const Header = () => {
@@ -27,16 +26,9 @@ const Header = () => {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
           <a href="#features" className="nav-link">Features</a>
-          <a href="#pricing" className="nav-link">Pricing</a>
+          <a href="#contact" className="nav-link">Contact</a>
           <a href="#faq" className="nav-link">FAQ</a>
         </nav>
-
-        <div className="hidden md:flex items-center space-x-4">
-          <Button variant="outline" className="border-diskyo-red text-diskyo-red hover:bg-diskyo-red hover:text-white">
-            Login
-          </Button>
-          <Button className="gradient-btn">Get Started</Button>
-        </div>
 
         {/* Mobile Menu Button */}
         <button
@@ -55,18 +47,12 @@ const Header = () => {
             <a href="#features" className="px-4 py-2 rounded-md hover:bg-gray-800" onClick={toggleMenu}>
               Features
             </a>
-            <a href="#pricing" className="px-4 py-2 rounded-md hover:bg-gray-800" onClick={toggleMenu}>
-              Pricing
+            <a href="#contact" className="px-4 py-2 rounded-md hover:bg-gray-800" onClick={toggleMenu}>
+              Contact
             </a>
             <a href="#faq" className="px-4 py-2 rounded-md hover:bg-gray-800" onClick={toggleMenu}>
               FAQ
             </a>
-            <div className="pt-4 flex flex-col space-y-2">
-              <Button variant="outline" className="border-diskyo-red text-diskyo-red hover:bg-diskyo-red hover:text-white">
-                Login
-              </Button>
-              <Button className="gradient-btn">Get Started</Button>
-            </div>
           </nav>
         </div>
       )}
