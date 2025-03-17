@@ -42,15 +42,13 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
         <h1 className="text-6xl md:text-8xl font-bold tracking-tight text-transparent relative">
           {/* Text with stroke effect */}
           <span className="absolute inset-0 text-foreground" style={{
-            WebkitTextStroke: '1px white',
-            textStroke: '1px white'
+            WebkitTextStroke: '1px white'
           }}>DISK C</span>
           
           {/* Liquid fill effect */}
           <div className="absolute inset-0 overflow-hidden" style={{ width: `${fillWidth}%` }}>
             <span className="gradient-text" style={{
-              WebkitTextStroke: '1px white',
-              textStroke: '1px white'
+              WebkitTextStroke: '1px white'
             }}>DISK C</span>
           </div>
           
