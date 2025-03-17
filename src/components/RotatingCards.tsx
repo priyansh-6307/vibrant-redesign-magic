@@ -107,9 +107,6 @@ const RotatingCards = () => {
             <div className="text-4xl md:text-5xl font-bold gradient-text pointer-events-none">
               magic
             </div>
-            <div className="absolute text-xl text-gray-300 mt-20 pointer-events-none">
-              as a service
-            </div>
           </div>
           
           {/* Rotating cards */}
