@@ -4,37 +4,133 @@ import { ArrowRight, Play, Pause, Volume2, Maximize, VolumeX, Minimize } from "l
 
 const Hero = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start with muted state matching the player
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [formattedCurrentTime, setFormattedCurrentTime] = useState("00:00");
   const [formattedDuration, setFormattedDuration] = useState("00:00");
-  const videoRef = useRef(null);
   const containerRef = useRef(null);
+  const iframeRef = useRef(null);
+  const playerRef = useRef(null);
+
+  // YouTube Player API integration
+  useEffect(() => {
+    // Load YouTube API
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    // Initialize YouTube player when API is ready
+    window.onYouTubeIframeAPIReady = () => {
+      playerRef.current = new window.YT.Player('youtube-player', {
+        videoId: 'sxPoSMlE1tI', // The ID from your YouTube URL
+        playerVars: {
+          controls: 0,
+          showinfo: 0,
+          rel: 0,
+          autoplay: 0,
+          mute: 1, // Start muted by default
+          loop: 1,
+          playsinline: 1,
+          modestbranding: 1,
+          enablejsapi: 1
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    };
+
+    // Clean up
+    return () => {
+      window.onYouTubeIframeAPIReady = null;
+      if (playerRef.current) {
+        playerRef.current.destroy();
+      }
+    };
+  }, []);
+
+  const onPlayerReady = (event) => {
+    // Player is ready, set duration
+    if (playerRef.current) {
+      const videoDuration = playerRef.current.getDuration();
+      setDuration(videoDuration);
+      setFormattedDuration(formatTime(videoDuration));
+    }
+  };
+
+  const onPlayerStateChange = (event) => {
+    // Update UI based on player state
+    if (event.data === window.YT.PlayerState.PLAYING) {
+      setIsPlaying(true);
+      startTimeUpdate();
+    } else if (event.data === window.YT.PlayerState.PAUSED) {
+      setIsPlaying(false);
+      stopTimeUpdate();
+    } else if (event.data === window.YT.PlayerState.ENDED) {
+      setIsPlaying(false);
+      stopTimeUpdate();
+      // Optionally restart the video
+      if (playerRef.current) {
+        playerRef.current.seekTo(0);
+      }
+    }
+  };
+
+  // Timer for updating current time
+  let timeUpdateInterval = null;
+  
+  const startTimeUpdate = () => {
+    if (timeUpdateInterval) clearInterval(timeUpdateInterval);
+    
+    timeUpdateInterval = setInterval(() => {
+      if (playerRef.current) {
+        const current = playerRef.current.getCurrentTime();
+        setCurrentTime(current);
+        setFormattedCurrentTime(formatTime(current));
+      }
+    }, 1000);
+  };
+  
+  const stopTimeUpdate = () => {
+    if (timeUpdateInterval) {
+      clearInterval(timeUpdateInterval);
+      timeUpdateInterval = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      // Clean up interval on component unmount
+      stopTimeUpdate();
+    };
+  }, []);
 
   const handlePlayVideo = () => {
-    if (videoRef.current) {
+    if (playerRef.current) {
       if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
+        playerRef.current.pauseVideo();
       } else {
-        // When user manually plays the video
-        videoRef.current.play()
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch(error => {
-            console.log("Play attempt failed:", error);
-            setIsPlaying(false);
-          });
+        playerRef.current.playVideo();
+        // If video is being played and currently muted, unmute it
+        if (isMuted) {
+          playerRef.current.unMute();
+          setIsMuted(false);
+        }
       }
     }
   };
 
   const handleToggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
+    if (playerRef.current) {
+      if (isMuted) {
+        playerRef.current.unMute();
+      } else {
+        playerRef.current.mute();
+      }
       setIsMuted(!isMuted);
     }
   };
@@ -73,27 +169,11 @@ const Hero = () => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      const current = videoRef.current.currentTime;
-      setCurrentTime(current);
-      setFormattedCurrentTime(formatTime(current));
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      const videoDuration = videoRef.current.duration;
-      setDuration(videoDuration);
-      setFormattedDuration(formatTime(videoDuration));
-    }
-  };
-
   const handleProgressChange = (e) => {
     const newTime = parseFloat(e.target.value);
     setCurrentTime(newTime);
-    if (videoRef.current) {
-      videoRef.current.currentTime = newTime;
+    if (playerRef.current) {
+      playerRef.current.seekTo(newTime);
     }
   };
 
@@ -165,19 +245,10 @@ const Hero = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-diskyo-violet/5 to-transparent opacity-60 pointer-events-none"></div>
                 <div className="absolute inset-0 border border-diskyo-violet/30 rounded-xl"></div>
                 
-                {/* Video Content - Using HTML5 video with poster image always visible when not playing */}
-                <video
-                  ref={videoRef}
-                  className="absolute inset-0 w-full h-full object-cover z-0"
-                  src="Aa.mp4"
-                  poster="aaa.png"
-                  playsInline
-                  muted={isMuted}
-                  loop
-                  preload="metadata"
-                  onTimeUpdate={handleTimeUpdate}
-                  onLoadedMetadata={handleLoadedMetadata}
-                />
+                {/* YouTube iframe replacing HTML5 video */}
+                <div className="relative w-full h-full">
+                  <div id="youtube-player" className="absolute inset-0 w-full h-full"></div>
+                </div>
                 
                 {/* Play overlay that shows when video is paused/not started */}
                 {!isPlaying && (
@@ -217,9 +288,6 @@ const Hero = () => {
                       <div className="absolute inset-0 bg-diskyo-red/40 rounded-full blur-md animate-pulse-slow"></div>
                       <Play fill="white" size={36} className="relative z-10" />
                     </div>
-                    
-                    {/* YouTube logo */}
-                   
                   </div>
                 )}
                 
